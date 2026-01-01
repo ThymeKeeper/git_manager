@@ -599,7 +599,8 @@ fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
 
     let paragraph = Paragraph::new(status_text)
         .block(block)
-        .style(Style::default().fg(Color::White));
+        .style(Style::default().fg(Color::White))
+        .wrap(ratatui::widgets::Wrap { trim: false });
 
     f.render_widget(paragraph, area);
 }

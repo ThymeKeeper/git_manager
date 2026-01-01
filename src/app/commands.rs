@@ -866,9 +866,25 @@ impl App {
             .map_err(|e| format!("Failed to execute git: {}", e))?;
 
         if output.status.success() {
+            // Reload graph after successful push to update sync status
+            let _ = self.init();
             Ok("Pushed to remote".to_string())
         } else {
-            Err(String::from_utf8_lossy(&output.stderr).to_string())
+            let error_msg = String::from_utf8_lossy(&output.stderr).to_string();
+
+            // Detect common error scenarios and provide helpful messages
+            if error_msg.contains("rejected") && error_msg.contains("fetch first") {
+                Err("Push rejected: Remote has changes you don't have locally. Use 'pull' or 'fetch and sync all branches' first.".to_string())
+            } else if error_msg.contains("non-fast-forward") {
+                Err("Push rejected: Non-fast-forward update. Pull changes first or use force push (dangerous).".to_string())
+            } else if error_msg.contains("no upstream branch") || error_msg.contains("has no upstream") {
+                Err("Push failed: No upstream branch set. Use 'git push -u origin <branch>' from terminal.".to_string())
+            } else if error_msg.contains("Authentication failed") || error_msg.contains("Could not read from remote") {
+                Err("Push failed: Authentication error. Check your credentials or SSH keys.".to_string())
+            } else {
+                // Return the full error message for other cases
+                Err(format!("Push failed: {}", error_msg.trim()))
+            }
         }
     }
 
