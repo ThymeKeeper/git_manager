@@ -244,6 +244,23 @@ fn run_app<B: ratatui::backend::Backend>(
                             _ => {}
                         }
                     }
+                    AppMode::SetRemoteHost => {
+                        match key.code {
+                            KeyCode::Enter => {
+                                app.submit_remote_host();
+                            }
+                            KeyCode::Esc => {
+                                app.cancel_remote_host_input();
+                            }
+                            KeyCode::Backspace => {
+                                app.remote_host_backspace();
+                            }
+                            KeyCode::Char(c) => {
+                                app.remote_host_input_char(c);
+                            }
+                            _ => {}
+                        }
+                    }
                     AppMode::SquashCountInput => {
                         match key.code {
                             KeyCode::Enter => {

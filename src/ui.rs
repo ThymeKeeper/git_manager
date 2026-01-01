@@ -87,6 +87,8 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         draw_config_input_dialog(f, app, "Set Git User Name", &app.config_input);
     } else if app.mode == AppMode::SetUserEmail {
         draw_config_input_dialog(f, app, "Set Git User Email", &app.config_input);
+    } else if app.mode == AppMode::SetRemoteHost {
+        draw_config_input_dialog(f, app, "Set Remote URL", &app.remote_host_input);
     } else if app.mode == AppMode::SquashCountInput {
         draw_squash_count_dialog(f, app);
     } else if app.mode == AppMode::RewordMessage {
@@ -583,15 +585,15 @@ fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
 
     let status_text = if let Some(ref msg) = app.status_message {
         msg.clone()
+    } else if !app.has_git_repo {
+        "⚠ No git repository found - some features may be unavailable".to_string()
     } else {
         let branch = app.current_branch.as_deref().unwrap_or("unknown");
-        let user_name = app.git_user_name.as_deref().unwrap_or("not set");
-        let user_email = app.git_user_email.as_deref().unwrap_or("not set");
+        let remote_host = app.git_remote_host.as_deref().unwrap_or("no remote");
         format!(
-            "Branch: {} | User: {} <{}>",
+            "Branch: {} | Remote: {}",
             branch,
-            user_name,
-            user_email
+            remote_host
         )
     };
 
