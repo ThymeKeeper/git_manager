@@ -69,6 +69,9 @@ fn run_app<B: ratatui::backend::Backend>(
                         use app::FocusedPane;
 
                         match key.code {
+                            KeyCode::F(1) => {
+                                app.toggle_help();
+                            }
                             KeyCode::Char('q') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                                 app.quit();
                             }
@@ -306,10 +309,10 @@ fn run_app<B: ratatui::backend::Backend>(
                             KeyCode::Esc => {
                                 app.cancel_commit_selection();
                             }
-                            KeyCode::Down | KeyCode::Char('j') => {
+                            KeyCode::Down => {
                                 app.move_selection_down();
                             }
-                            KeyCode::Up | KeyCode::Char('k') => {
+                            KeyCode::Up => {
                                 app.move_selection_up();
                             }
                             _ => {}
@@ -337,17 +340,31 @@ fn run_app<B: ratatui::backend::Backend>(
                             KeyCode::Esc | KeyCode::Char('q') => {
                                 app.close_file_diff_view();
                             }
-                            KeyCode::Down | KeyCode::Char('j') => {
+                            KeyCode::Down => {
                                 app.details_scroll_down();
                             }
-                            KeyCode::Up | KeyCode::Char('k') => {
+                            KeyCode::Up => {
                                 app.details_scroll_up();
                             }
-                            KeyCode::Left | KeyCode::Char('h') => {
+                            KeyCode::Left => {
                                 app.details_scroll_left();
                             }
-                            KeyCode::Right | KeyCode::Char('l') => {
+                            KeyCode::Right => {
                                 app.details_scroll_right();
+                            }
+                            _ => {}
+                        }
+                    }
+                    AppMode::Help => {
+                        match key.code {
+                            KeyCode::F(1) | KeyCode::Esc | KeyCode::Char('q') => {
+                                app.toggle_help();
+                            }
+                            KeyCode::Up => {
+                                app.scroll_help_up();
+                            }
+                            KeyCode::Down => {
+                                app.scroll_help_down();
                             }
                             _ => {}
                         }

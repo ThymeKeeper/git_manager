@@ -201,4 +201,21 @@ impl App {
             self.selected_file_idx = Some(0);
         }
     }
+
+    pub fn toggle_help(&mut self) {
+        if self.mode == AppMode::Help {
+            self.mode = AppMode::Normal;
+        } else {
+            self.mode = AppMode::Help;
+            self.help_scroll_offset = 0;
+        }
+    }
+
+    pub fn scroll_help_up(&mut self) {
+        self.help_scroll_offset = self.help_scroll_offset.saturating_sub(1);
+    }
+
+    pub fn scroll_help_down(&mut self) {
+        self.help_scroll_offset += 1;
+    }
 }

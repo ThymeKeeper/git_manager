@@ -62,6 +62,7 @@ pub enum AppMode {
     SelectCommitsForBranch,
     AssignBranchName,
     FileDiffView,
+    Help,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

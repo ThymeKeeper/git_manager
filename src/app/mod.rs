@@ -61,6 +61,7 @@ pub struct App {
     pub selected_commit_ids: Vec<String>,
     pub assign_branch_name_input: String,
     pub commits_not_in_current_branch: std::collections::HashSet<String>,
+    pub help_scroll_offset: usize,
 }
 
 impl App {
@@ -136,6 +137,7 @@ impl App {
             selected_commit_ids: Vec::new(),
             assign_branch_name_input: String::new(),
             commits_not_in_current_branch: std::collections::HashSet::new(),
+            help_scroll_offset: 0,
         }
     }
 

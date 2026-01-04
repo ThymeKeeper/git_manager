@@ -18,8 +18,14 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         ])
         .split(f.area());
 
-    // If file diff view is active, show it fullscreen
+    // If help screen is active, show it fullscreen
     use crate::app::AppMode;
+    if app.mode == AppMode::Help {
+        draw_help_screen(f, app, f.area());
+        return;
+    }
+
+    // If file diff view is active, show it fullscreen
     if app.mode == AppMode::FileDiffView {
         draw_file_diff_fullscreen(f, app, chunks[0]);
         draw_status_bar(f, app, chunks[1]);
@@ -1165,4 +1171,122 @@ fn draw_file_diff_fullscreen(f: &mut Frame, app: &App, area: Rect) {
             .style(Style::default().fg(Color::DarkGray));
         f.render_widget(msg, inner_area);
     }
+}
+
+fn draw_help_screen(f: &mut Frame, app: &App, area: Rect) {
+    // Clear the screen
+    f.render_widget(Clear, area);
+
+    let bg_color = Color::Rgb(40, 40, 40);
+    let title_color = Color::Cyan;
+    let section_color = Color::Yellow;
+    let key_color = Color::Green;
+    let desc_color = Color::White;
+
+    let mut help_lines = vec![];
+
+    // Title
+    help_lines.push(Line::from(vec![Span::styled("", Style::default())]));
+    help_lines.push(Line::from(vec![
+        Span::styled("                      GIT MANAGER - Keyboard Shortcuts",
+            Style::default().fg(title_color))
+    ]));
+    help_lines.push(Line::from(vec![Span::styled("", Style::default())]));
+
+    // Navigation section
+    help_lines.push(Line::from(vec![
+        Span::styled("  NAVIGATION", Style::default().fg(section_color))
+    ]));
+    help_lines.push(Line::from(vec![
+        Span::styled("    Tab                           ", Style::default().fg(key_color)),
+        Span::styled("Switch between panes", Style::default().fg(desc_color))
+    ]));
+    help_lines.push(Line::from(vec![
+        Span::styled("    Arrow Keys                    ", Style::default().fg(key_color)),
+        Span::styled("Navigate and scroll", Style::default().fg(desc_color))
+    ]));
+    help_lines.push(Line::from(vec![
+        Span::styled("    Enter                         ", Style::default().fg(key_color)),
+        Span::styled("Load diff / Execute action / Toggle details", Style::default().fg(desc_color))
+    ]));
+    help_lines.push(Line::from(vec![
+        Span::styled("    Space                         ", Style::default().fg(key_color)),
+        Span::styled("Toggle selection (for multi-commit ops)", Style::default().fg(desc_color))
+    ]));
+    help_lines.push(Line::from(vec![Span::styled("", Style::default())]));
+
+    // Git Actions section
+    help_lines.push(Line::from(vec![
+        Span::styled("  GIT ACTIONS", Style::default().fg(section_color))
+    ]));
+    help_lines.push(Line::from(vec![
+        Span::styled("    Enter                         ", Style::default().fg(key_color)),
+        Span::styled("Execute selected git command", Style::default().fg(desc_color))
+    ]));
+    help_lines.push(Line::from(vec![Span::styled("", Style::default())]));
+
+    // Git Status section
+    help_lines.push(Line::from(vec![
+        Span::styled("  GIT STATUS", Style::default().fg(section_color))
+    ]));
+    help_lines.push(Line::from(vec![
+        Span::styled("    Enter (on file)               ", Style::default().fg(key_color)),
+        Span::styled("View file diff", Style::default().fg(desc_color))
+    ]));
+    help_lines.push(Line::from(vec![Span::styled("", Style::default())]));
+
+    // Other section
+    help_lines.push(Line::from(vec![
+        Span::styled("  OTHER", Style::default().fg(section_color))
+    ]));
+    help_lines.push(Line::from(vec![
+        Span::styled("    r                             ", Style::default().fg(key_color)),
+        Span::styled("Refresh repository view", Style::default().fg(desc_color))
+    ]));
+    help_lines.push(Line::from(vec![
+        Span::styled("    Esc                           ", Style::default().fg(key_color)),
+        Span::styled("Cancel current dialog/input", Style::default().fg(desc_color))
+    ]));
+    help_lines.push(Line::from(vec![
+        Span::styled("    Ctrl+Q                        ", Style::default().fg(key_color)),
+        Span::styled("Quit application", Style::default().fg(desc_color))
+    ]));
+    help_lines.push(Line::from(vec![
+        Span::styled("    F1                            ", Style::default().fg(key_color)),
+        Span::styled("Show/hide this help", Style::default().fg(desc_color))
+    ]));
+    help_lines.push(Line::from(vec![Span::styled("", Style::default())]));
+    help_lines.push(Line::from(vec![Span::styled("", Style::default())]));
+
+    // Apply scroll offset
+    let scrolled_lines: Vec<Line> = help_lines.into_iter()
+        .skip(app.help_scroll_offset)
+        .collect();
+
+    // Split area for fixed footer
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Min(0),       // Scrollable content
+            Constraint::Length(2),    // Fixed footer
+        ])
+        .split(area);
+
+    // Render scrollable content
+    let para = Paragraph::new(scrolled_lines)
+        .block(Block::default())
+        .style(Style::default().bg(bg_color));
+    f.render_widget(para, chunks[0]);
+
+    // Render fixed footer
+    let footer_lines = vec![
+        Line::from(vec![Span::styled("", Style::default())]),
+        Line::from(vec![
+            Span::styled("           Use Up/Down arrows to scroll | Press F1, Esc, or 'q' to close",
+                Style::default().fg(title_color))
+        ]),
+    ];
+    let footer_para = Paragraph::new(footer_lines)
+        .style(Style::default().bg(bg_color));
+    f.render_widget(footer_para, chunks[1]);
 }
