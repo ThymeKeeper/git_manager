@@ -23,6 +23,9 @@ pub struct App {
     pub active_columns: Vec<usize>,
     pub selected_commit_idx: Option<usize>,
     pub current_branch: Option<String>,
+    pub branch_ahead: usize,
+    pub branch_behind: usize,
+    pub has_upstream: bool,
     pub current_diff: Option<String>,
     pub git_user_name: Option<String>,
     pub git_user_email: Option<String>,
@@ -73,6 +76,9 @@ impl App {
             active_columns: Vec::new(),
             selected_commit_idx: None,
             current_branch: None,
+            branch_ahead: 0,
+            branch_behind: 0,
+            has_upstream: false,
             current_diff: None,
             git_user_name: None,
             git_user_email: None,
@@ -193,6 +199,9 @@ impl App {
                 // Load git status
                 self.load_git_status();
 
+                // Calculate ahead/behind counts
+                self.update_branch_ahead_behind();
+
                 // Start git validation in background
                 self.start_git_validation();
 
@@ -202,6 +211,50 @@ impl App {
                 self.has_git_repo = false;
                 self.set_status_message(format!("⚠ No git repository found in current directory"));
                 Ok(())  // Don't error out, let the app run with a warning
+            }
+        }
+    }
+
+    fn update_branch_ahead_behind(&mut self) {
+        // Reset to 0
+        self.branch_ahead = 0;
+        self.branch_behind = 0;
+        self.has_upstream = false;
+
+        // Get current branch name
+        let branch_name = match &self.current_branch {
+            Some(name) => name,
+            None => return,
+        };
+
+        // Check if there's a remote tracking branch
+        let output = Command::new("git")
+            .args(&["rev-parse", "--abbrev-ref", &format!("{}@{{upstream}}", branch_name)])
+            .output();
+
+        let upstream = match output {
+            Ok(output) if output.status.success() => {
+                String::from_utf8_lossy(&output.stdout).trim().to_string()
+            }
+            _ => return, // No upstream branch
+        };
+
+        // We have an upstream branch
+        self.has_upstream = true;
+
+        // Get ahead/behind counts
+        let output = Command::new("git")
+            .args(&["rev-list", "--left-right", "--count", &format!("{}...{}", upstream, branch_name)])
+            .output();
+
+        if let Ok(output) = output {
+            if output.status.success() {
+                let counts = String::from_utf8_lossy(&output.stdout);
+                let parts: Vec<&str> = counts.trim().split_whitespace().collect();
+                if parts.len() == 2 {
+                    self.branch_behind = parts[0].parse().unwrap_or(0);
+                    self.branch_ahead = parts[1].parse().unwrap_or(0);
+                }
             }
         }
     }

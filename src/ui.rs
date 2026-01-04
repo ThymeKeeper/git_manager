@@ -14,7 +14,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Min(10),      // Main area
-            Constraint::Length(3),    // Status bar
+            Constraint::Length(1),    // Status bar
         ])
         .split(f.area());
 
@@ -579,10 +579,6 @@ fn draw_git_actions(f: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
-    let block = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::default().fg(Color::White));
-
     let status_text = if let Some(ref msg) = app.status_message {
         msg.clone()
     } else if !app.has_git_repo {
@@ -590,17 +586,35 @@ fn draw_status_bar(f: &mut Frame, app: &App, area: Rect) {
     } else {
         let branch = app.current_branch.as_deref().unwrap_or("unknown");
         let remote_host = app.git_remote_host.as_deref().unwrap_or("no remote");
+
+        // Add ahead/behind info if available
+        let ahead_behind = if app.branch_ahead > 0 || app.branch_behind > 0 {
+            let mut parts = Vec::new();
+            if app.branch_ahead > 0 {
+                parts.push(format!("↑{}", app.branch_ahead));
+            }
+            if app.branch_behind > 0 {
+                parts.push(format!("↓{}", app.branch_behind));
+            }
+            format!(" [{}]", parts.join(" "))
+        } else if app.has_upstream {
+            // Has upstream and in sync
+            " [synced]".to_string()
+        } else {
+            String::new()
+        };
+
         format!(
-            "Branch: {} | Remote: {}",
+            "Branch: {}{} | Remote: {}",
             branch,
+            ahead_behind,
             remote_host
         )
     };
 
     let paragraph = Paragraph::new(status_text)
-        .block(block)
-        .style(Style::default().fg(Color::White))
-        .wrap(ratatui::widgets::Wrap { trim: false });
+        .style(Style::default().fg(Color::Rgb(185, 177, 160)).bg(Color::Rgb(90, 90, 90)))
+        .alignment(ratatui::layout::Alignment::Left);
 
     f.render_widget(paragraph, area);
 }
